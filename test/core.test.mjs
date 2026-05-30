@@ -2,7 +2,9 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   DEFAULT_SETTINGS,
+  createMockResponse,
   createRun,
+  getProvider,
   parseModelList,
   safeSettingsForStorage,
   summarizeRuns,
@@ -22,6 +24,22 @@ test("safeSettingsForStorage removes apiKey", () => {
 
   assert.equal("apiKey" in settings, false);
   assert.deepEqual(settings.models, ["llama3.1", "qwen2.5"]);
+});
+
+test("getProvider falls back to demo provider", () => {
+  assert.equal(getProvider("missing").id, "demo");
+  assert.equal(getProvider("ollama").requiresEndpoint, true);
+});
+
+test("createMockResponse returns usage and prompt preview", () => {
+  const response = createMockResponse({
+    model: "demo-fast",
+    prompt: "請摘要這段內容",
+  });
+
+  assert.match(response.output, /demo-fast/);
+  assert.match(response.output, /Prompt 摘要/);
+  assert.equal(response.usage.totalTokens, response.usage.promptTokens + response.usage.completionTokens);
 });
 
 test("summarizeRuns returns totals and average latency", () => {
@@ -76,4 +94,3 @@ test("toMarkdownReport includes model output", () => {
   assert.match(markdown, /test-model/);
   assert.match(markdown, /world/);
 });
-

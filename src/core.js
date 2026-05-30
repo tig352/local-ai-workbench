@@ -1,10 +1,38 @@
 export const DEFAULT_SETTINGS = {
-  provider: "ollama",
-  endpoint: "http://localhost:11434",
-  models: ["llama3.1"],
+  provider: "demo",
+  endpoint: "",
+  models: ["demo-fast"],
   temperature: 0.7,
   systemPrompt: "你是一個謹慎、簡潔的中文技術助手。",
 };
+
+export const PROVIDERS = [
+  {
+    id: "demo",
+    label: "Demo mock",
+    requiresEndpoint: false,
+    defaultEndpoint: "",
+    defaultModels: ["demo-fast"],
+  },
+  {
+    id: "ollama",
+    label: "Ollama",
+    requiresEndpoint: true,
+    defaultEndpoint: "http://localhost:11434",
+    defaultModels: ["llama3.1"],
+  },
+  {
+    id: "openai-compatible",
+    label: "OpenAI compatible",
+    requiresEndpoint: true,
+    defaultEndpoint: "http://localhost:8000/v1",
+    defaultModels: ["gpt-4.1-mini"],
+  },
+];
+
+export function getProvider(providerId) {
+  return PROVIDERS.find((provider) => provider.id === providerId) ?? PROVIDERS[0];
+}
 
 export function parseModelList(value) {
   if (Array.isArray(value)) {
@@ -18,9 +46,12 @@ export function parseModelList(value) {
 
 export function safeSettingsForStorage(settings) {
   const { apiKey: _apiKey, ...safeSettings } = settings;
+  const provider = getProvider(safeSettings.provider);
   return {
     ...DEFAULT_SETTINGS,
     ...safeSettings,
+    provider: provider.id,
+    endpoint: safeSettings.endpoint ?? provider.defaultEndpoint,
     models: parseModelList(safeSettings.models),
     temperature: Number.isFinite(Number(safeSettings.temperature))
       ? Number(safeSettings.temperature)
@@ -45,6 +76,30 @@ export function createSamplePrompts() {
       updatedAt: new Date().toISOString(),
     },
   ];
+}
+
+export function createMockResponse({ model, prompt }) {
+  const compactPrompt = String(prompt ?? "").replace(/\s+/g, " ").trim();
+  const preview = compactPrompt.slice(0, 180) || "未提供 prompt";
+  const promptTokens = Math.max(8, Math.ceil(compactPrompt.length / 3));
+  const completionTokens = 120;
+  return {
+    output: [
+      `這是 ${model} 的本地 Demo 回覆。`,
+      "",
+      "你可以用它在沒有 Ollama 或 API key 的情況下驗證工作台流程：",
+      "- Prompt 已被讀取",
+      "- 多模型執行會生成記錄",
+      "- Markdown / JSON 導出可以正常工作",
+      "",
+      `Prompt 摘要：${preview}`,
+    ].join("\n"),
+    usage: {
+      promptTokens,
+      completionTokens,
+      totalTokens: promptTokens + completionTokens,
+    },
+  };
 }
 
 export function createRun(input) {
@@ -129,4 +184,3 @@ export function downloadText(filename, content, mimeType) {
   link.remove();
   URL.revokeObjectURL(url);
 }
-

@@ -4,6 +4,8 @@
 
 - [x] 一個可本地啟動的界面或 CLI
 - [x] Provider 配置：OpenAI compatible API、Ollama
+- [x] Demo mock provider
+- [x] Provider 連接測試
 - [x] Prompt 新增、編輯、標籤
 - [x] 單 prompt 多模型執行
 - [x] 本地保存執行記錄
@@ -19,7 +21,6 @@
 ## 下一輪驗收
 
 - 使用真實 Ollama 模型完成一次頁面截圖
-- 增加連接失敗時的中文排錯文檔
 - 補充導出報告樣例
 
 ## 風險

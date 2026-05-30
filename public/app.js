@@ -1,8 +1,10 @@
 import {
   DEFAULT_SETTINGS,
+  createMockResponse,
   createRun,
   createSamplePrompts,
   downloadText,
+  getProvider,
   parseModelList,
   safeSettingsForStorage,
   summarizeRuns,
@@ -20,6 +22,8 @@ const elements = {
   exportJsonBtn: document.querySelector("#exportJsonBtn"),
   exportMarkdownBtn: document.querySelector("#exportMarkdownBtn"),
   saveSettingsBtn: document.querySelector("#saveSettingsBtn"),
+  testConnectionBtn: document.querySelector("#testConnectionBtn"),
+  connectionStatus: document.querySelector("#connectionStatus"),
   provider: document.querySelector("#provider"),
   endpoint: document.querySelector("#endpoint"),
   models: document.querySelector("#models"),
@@ -68,22 +72,41 @@ function flashStatus(message) {
 }
 
 function applySettingsToForm() {
+  state.settings = safeSettingsForStorage(state.settings);
   elements.provider.value = state.settings.provider;
   elements.endpoint.value = state.settings.endpoint;
   elements.models.value = state.settings.models.join(", ");
   elements.temperature.value = String(state.settings.temperature);
   elements.systemPrompt.value = state.settings.systemPrompt;
+  applyProviderDefaults(false);
 }
 
 function readSettingsFromForm() {
+  const provider = getProvider(elements.provider.value);
   return {
-    provider: elements.provider.value,
+    provider: provider.id,
     endpoint: elements.endpoint.value.trim(),
-    models: parseModelList(elements.models.value),
+    models: parseModelList(elements.models.value.length > 0 ? elements.models.value : provider.defaultModels),
     temperature: Number(elements.temperature.value || DEFAULT_SETTINGS.temperature),
     apiKey: elements.apiKey.value.trim(),
     systemPrompt: elements.systemPrompt.value.trim(),
   };
+}
+
+function applyProviderDefaults(shouldOverwrite) {
+  const provider = getProvider(elements.provider.value);
+  elements.endpoint.disabled = !provider.requiresEndpoint;
+  elements.apiKey.disabled = provider.id === "demo";
+  if (shouldOverwrite || !elements.models.value.trim()) {
+    elements.models.value = provider.defaultModels.join(", ");
+  }
+  if (shouldOverwrite || !elements.endpoint.value.trim()) {
+    elements.endpoint.value = provider.defaultEndpoint;
+  }
+  if (provider.id === "demo") {
+    elements.endpoint.value = "";
+    elements.apiKey.value = "";
+  }
 }
 
 function renderPromptSelect() {
@@ -167,8 +190,9 @@ async function runModels() {
   const promptText = elements.promptText.value.trim();
   const settings = readSettingsFromForm();
   const models = settings.models;
+  const provider = getProvider(settings.provider);
 
-  if (!settings.endpoint) {
+  if (provider.requiresEndpoint && !settings.endpoint) {
     flashStatus("請先配置 Endpoint");
     return;
   }
@@ -232,10 +256,18 @@ async function runModels() {
 }
 
 async function callModel(settings) {
+  if (settings.provider === "demo") {
+    return callDemo(settings);
+  }
   if (settings.provider === "ollama") {
     return callOllama(settings);
   }
   return callOpenAiCompatible(settings);
+}
+
+async function callDemo(settings) {
+  await new Promise((resolve) => window.setTimeout(resolve, 120));
+  return createMockResponse(settings);
 }
 
 async function callOllama(settings) {
@@ -321,6 +353,45 @@ function trimSlash(value) {
   return value.replace(/\/+$/, "");
 }
 
+async function testConnection() {
+  const settings = readSettingsFromForm();
+  const provider = getProvider(settings.provider);
+  setConnectionStatus("檢查中...", "pending");
+  elements.testConnectionBtn.disabled = true;
+  try {
+    if (provider.id === "demo") {
+      setConnectionStatus("Demo provider 可用", "ok");
+      return;
+    }
+    if (!settings.endpoint) {
+      throw new Error("請先配置 Endpoint");
+    }
+    if (provider.id === "ollama") {
+      const response = await fetch(`${trimSlash(settings.endpoint)}/api/tags`);
+      const data = await parseJsonResponse(response);
+      const count = Array.isArray(data?.models) ? data.models.length : 0;
+      setConnectionStatus(`Ollama 可連接，模型數：${count}`, "ok");
+      return;
+    }
+    const headers = {};
+    if (settings.apiKey) {
+      headers.authorization = `Bearer ${settings.apiKey}`;
+    }
+    const response = await fetch(`${trimSlash(settings.endpoint)}/models`, { headers });
+    await parseJsonResponse(response);
+    setConnectionStatus("OpenAI compatible endpoint 可連接", "ok");
+  } catch (error) {
+    setConnectionStatus(error instanceof Error ? error.message : String(error), "error");
+  } finally {
+    elements.testConnectionBtn.disabled = false;
+  }
+}
+
+function setConnectionStatus(message, state) {
+  elements.connectionStatus.textContent = message;
+  elements.connectionStatus.dataset.state = state;
+}
+
 function renderRuns() {
   const summary = summarizeRuns(state.runs);
   elements.runSummary.replaceChildren(
@@ -389,6 +460,11 @@ function exportMarkdown() {
 }
 
 elements.saveSettingsBtn.addEventListener("click", saveSettings);
+elements.testConnectionBtn.addEventListener("click", testConnection);
+elements.provider.addEventListener("change", () => {
+  applyProviderDefaults(true);
+  setConnectionStatus("尚未測試", "idle");
+});
 elements.promptSelect.addEventListener("change", renderSelectedPrompt);
 elements.newPromptBtn.addEventListener("click", newPrompt);
 elements.savePromptBtn.addEventListener("click", upsertPrompt);
@@ -401,4 +477,3 @@ elements.exportMarkdownBtn.addEventListener("click", exportMarkdown);
 applySettingsToForm();
 renderPromptSelect();
 renderRuns();
-

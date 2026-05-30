@@ -30,6 +30,7 @@
           <label>
             Provider
             <select id="provider">
+              <option value="demo">Demo mock</option>
               <option value="ollama">Ollama</option>
               <option value="openai-compatible">OpenAI compatible</option>
             </select>
@@ -55,6 +56,10 @@
             <textarea id="systemPrompt" rows="3" placeholder="例如：你是一個謹慎、簡潔的中文技術助手。"></textarea>
           </label>
         </form>
+        <div class="diagnostic-row">
+          <button id="testConnectionBtn" type="button">測試連接</button>
+          <span id="connectionStatus" class="connection-status">尚未測試</span>
+        </div>
       </section>
 
       <section class="panel prompt-panel" aria-labelledby="promptTitle">
@@ -111,4 +116,3 @@
     <script type="module" src="./app.js"></script>
   </body>
 </html>
-

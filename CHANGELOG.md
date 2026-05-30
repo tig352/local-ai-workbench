@@ -9,3 +9,5 @@
 - 新增無外部依賴的本地 Web MVP。
 - 支援 Ollama / OpenAI compatible API 配置、prompt 保存、多模型執行、記錄導出。
 - 新增 Node 內建測試、build 和項目檢查腳本。
+- 新增 Demo mock provider，未安裝 Ollama 或沒有 API key 時也能跑通流程。
+- 新增 provider 連接測試與 provider 設定排錯文檔。

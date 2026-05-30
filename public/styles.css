@@ -177,6 +177,29 @@ textarea:focus {
   grid-column: 1 / -1;
 }
 
+.diagnostic-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 2px;
+}
+
+.connection-status {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.connection-status[data-state="ok"] {
+  color: var(--accent-strong);
+  font-weight: 700;
+}
+
+.connection-status[data-state="error"] {
+  color: var(--danger);
+  font-weight: 700;
+}
+
 .summary-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -281,4 +304,3 @@ textarea:focus {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
-

@@ -3,6 +3,7 @@
 已有截圖：
 
 - `mvp-home.png`：首版本地工作台桌面截圖
+- `demo-provider.png`：Demo mock provider 跑通後的測試記錄截圖
 
 後續補充：
 
