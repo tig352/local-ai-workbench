@@ -1,0 +1,17 @@
+node_modules/
+dist/
+build/
+coverage/
+.env
+.env.*
+!.env.example
+*.log
+__pycache__/
+.pytest_cache/
+.venv/
+.DS_Store
+Thumbs.db
+*cookie*
+*token*
+*secret*
+
