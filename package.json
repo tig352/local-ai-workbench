@@ -8,6 +8,7 @@
     "dev": "node scripts/dev-server.mjs",
     "build": "node scripts/build.mjs",
     "lint": "node scripts/check.mjs",
+    "release:check": "node scripts/prepublish-check.mjs",
     "test": "node --test"
   },
   "keywords": [
@@ -19,4 +20,3 @@
   ],
   "license": "MIT"
 }
-

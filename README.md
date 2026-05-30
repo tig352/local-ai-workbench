@@ -68,6 +68,7 @@ npm run dev
 npm run lint
 npm test
 npm run build
+npm run release:check
 ```
 
 ## 資料與安全
@@ -78,6 +79,8 @@ npm run build
 - 如果使用雲端 OpenAI compatible API，請自行確認 provider 的資料政策
 
 Provider 設定與排錯見 [docs/provider-setup.md](./docs/provider-setup.md)。
+
+發布前檢查見 [docs/publish-checklist.md](./docs/publish-checklist.md)，GitHub repo metadata 見 [docs/repo-metadata.md](./docs/repo-metadata.md)，自然分享文案見 [docs/share-copy.md](./docs/share-copy.md)。
 
 ## 截圖 / 演示
 
